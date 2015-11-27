@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 class node:
     next_unique_id = 0
@@ -22,11 +24,25 @@ class binary_tree:
 
     def _parse_newick(self, expr, parent=None):
         """parse a newick tree to this representation"""
+        print('i',expr)
         if expr[0] == '(':
-            assert expr[-1] == ')'
+            assert expr[-1] == ')',"Erreur de parentheses"
             e = node(parent=parent)
-            #a,b = expr.split(',') Trouver la virgule du milieu et se débarasser des parenthèses.
-            a,b = self.parse_newick(a,e), self.parse_newick(b,e)        
+    	    parCount=0
+    	    for i in range(len(expr)):
+		        if(parCount==1 and expr[i]==','):
+		            virgPos=i
+		            break
+		        if(expr[i]=='('):
+		            parCount+=1
+		        elif(expr[i]==')'):
+		            parCount-=1
+            a = expr[1:virgPos] #Trouver la virgule du milieu et se debarasser des parentheses.
+	        b = expr[virgPos+1:-1]
+	        print("a et b:")
+	        print(a)
+	        print(b)
+            a,b = self._parse_newick(a,e), self._parse_newick(b,e)        
             return e
         else :
             e = node(expr,parent)
@@ -34,16 +50,18 @@ class binary_tree:
             return e 
         
     def reset(self):
+        """ Lorsque appelé, cette fonction retourne la fringe à son état initial et ne considère aucun noeud comme étant visité. """
         self.search_fringe = self.leafs.copy()
         self.checked = set() 
     
     def __next__(self):
+    """ renvoit le prochain noeud, """
         if self.last is not None :
             if all(i.id in self.checked for i in self.last.parent.childrens):
                 self.search_fringe.append(self.last.parent)
                 
         if len(self.search_fringe) == 0 :
-            yield None
+            raise StopIteration
         else :
             self.last = self.search_fringe.pop(0)
             self.checked.add(self.last.id)
@@ -57,11 +75,12 @@ if __name__ == '__main__':
     print("arguments :")
     print(sys.argv)
     f = open(sys.argv[1], 'rb')
-    n = f.readline()
     for line in f:
-        line = line[:-3] #Stripping the line of ; and /n
-        print(line)
-        newick_trees.append(binary_tree(line))            
+        if all(i in line for i in '(',',',')'):  
+            line = line[:-2] #Stripping the line of ; and /n
+            print('aa', line)
+            newick_trees.append(binary_tree(line))            
             
+print(newick_trees)
 #    w = sys.argv[2]
 
