@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+import numpy as np
+
 
 class node:
     next_unique_id = 0
@@ -116,6 +118,8 @@ def getMutations():
 	print(f[0])	
 
 newick_trees = []
+characters = None
+mutations = None
 mutation = dict() # (from, to) -> cost
 
 
@@ -138,9 +142,10 @@ if __name__ == '__main__':
     mutation = dict() # (from, to) -> cost
     mut = open(sys.argv[2],'rb').read()
     lines = mut.split('\n')
-    x_axis = lines[0].replace(' ','')
-    print(x_axis)    
-    for i in lines[1:]:
+    characters = lines[0].replace(' ','')
+    print(characters)
+    mutations = np.zeros((len(characters),len(characters)))    
+    for y, i in enumerate(lines[1:]):
         #Thats kinda sketch but is there to remove multiple space
         last_len = len(i)+1
         actual_len = len(i)
@@ -150,11 +155,12 @@ if __name__ == '__main__':
             actual_len = len(i)
         #End of sketchy part             
         l = i.split(' ')
+        mutations[y] = l[1:]
         print(l)
-        from_ = l[0]
-        assert(len(l)-1 == len(x_axis))
-        for index, to in enumerate(x_axis):
-            mutation[(from_,to)] = int(l[index+1])
+#        from_ = l[0]
+#        assert(len(l)-1 == len(x_axis))
+#        for index, to in enumerate(x_axis):
+#            mutation[(from_,to)] = int(l[index+1])
     
     print(mutation)        
 
