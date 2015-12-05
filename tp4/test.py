@@ -14,7 +14,10 @@ class node:
         node.next_unique_id += 1
         self.content = content
         self.childrens = childrens
+	self.sequence=[]
 
+    def __str__(self):
+	return self.id
 
 class binary_tree:
     def __init__(self, newick_expr):
@@ -38,24 +41,29 @@ class binary_tree:
 		        elif(expr[i]==')'):
 		            parCount-=1
             a = expr[1:virgPos] #Trouver la virgule du milieu et se debarasser des parentheses.
-	        b = expr[virgPos+1:-1]
-	        print("a et b:")
-	        print(a)
-	        print(b)
+	    b = expr[virgPos+2:-1]
+	    print("a et b:")
+	    print(a)
+	    print(b)
             a,b = self._parse_newick(a,e), self._parse_newick(b,e)        
+	    #Voir si ca fonctionne
+	    e.childrens=[a,b]
             return e
         else :
             e = node(expr,parent)
             self.leafs.append(e)
             return e 
         
+    def __iter__(self):
+	return self
+
     def reset(self):
         """ Lorsque appelé, cette fonction retourne la fringe à son état initial et ne considère aucun noeud comme étant visité. """
-        self.search_fringe = self.leafs.copy()
+        self.search_fringe = list(self.leafs)
         self.checked = set() 
     
-    def __next__(self):
-    """ renvoit le prochain noeud, """
+    def next(self):
+    #""" renvoit le prochain noeud, """
         if self.last is not None :
             if all(i.id in self.checked for i in self.last.parent.childrens):
                 self.search_fringe.append(self.last.parent)
@@ -69,6 +77,26 @@ class binary_tree:
 
 newick_trees = []
 
+def getSequence(string,p):
+	p.seek(0)	
+	seq=''
+	take=False
+	for line in p:
+		print(line)
+		if line[0]=='>':
+			if line[1:-1]==string:
+				take=True
+			else:
+				take=False
+		elif(take):
+			seq+=line[:-1]
+	return seq
+
+def getMutations():
+	m = open('mutations.txt','rb')
+	print(f[0])	
+
+
 if __name__ == '__main__':
 
     import sys
@@ -76,11 +104,20 @@ if __name__ == '__main__':
     print(sys.argv)
     f = open(sys.argv[1], 'rb')
     for line in f:
-        if all(i in line for i in '(',',',')'):  
-            line = line[:-2] #Stripping the line of ; and /n
+        if all([i in line for i in '(',',',')']):  
+            line = line[:-3] #Stripping the line of ; and /n
             print('aa', line)
             newick_trees.append(binary_tree(line))            
-            
+#Début du traitement des données
+#    for l in newick_trees[0].leafs:
+#	l.sequence=getSequence(
+    print('-------ooo---------')
+    for x in newick_trees[0]:
+	print(x)      
+      
 print(newick_trees)
 #    w = sys.argv[2]
+print('----------')
+print(newick_trees[0].leafs[2].content)
+print(newick_trees[0].root.childrens[0].childrens[1].content)
 
