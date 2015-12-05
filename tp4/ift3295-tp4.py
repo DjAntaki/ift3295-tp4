@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 import numpy as np
 
-
 class node:
     next_unique_id = 0
 
@@ -20,6 +19,20 @@ class node:
             return str(self.id) 
         else :
             return str(self.id) + " " + str(self.content)
+            
+    def sankoff(self):
+        if self.childrens=[]:
+            pass
+        else:
+            sankoffList=[]
+            for c in self.childrens:
+                sankoffList.append(c.sankoff())
+            assert len(sankoffList)==2
+            sank=np.zeros(len(characters))
+            for i in range(len(sank)):                
+                #min_left=-1
+                #definir fonction qui retourne le vecteur de transitions
+                min_left=np.min(sankoffList[0]+mutations[i])            
             
 
 class binary_tree:
@@ -81,6 +94,14 @@ class binary_tree:
             self.checked.add(self.last.id)
             return self.last        
 
+    def pullSequences(self):
+        i=0
+        sequences=[]
+        for leaf in self.leafs:
+            strSeq=leaf.content
+            sequences.append(getSequence(strSeq,p))
+        return sequences
+
 #def getSequence(string,p) :
 #    """Kescéça?"""
 #	p.seek(0)	
@@ -112,6 +133,7 @@ def getSequence(string,p):
 		elif(take):
 			seq+=line[:-1]
 	return seq
+
 
 def getMutations():
 	m = open('mutations.txt','rb')
@@ -170,10 +192,4 @@ if __name__ == '__main__':
     print('-------ooo---------')
     for x in newick_trees[0]:
 	print(x)      
-      
-print(newick_trees)
-#    w = sys.argv[2]
-print('----------')
-print(newick_trees[0].leafs[2].content)
-print(newick_trees[0].root.childrens[0].childrens[1].content)
-
+    
