@@ -118,7 +118,6 @@ class binary_tree:
 #			seq+=line[:-1]
 #	return seq
 
-newick_trees = []
 
 def getSequence(string,p):
 	p.seek(0)	
@@ -140,21 +139,49 @@ def getMutations():
 	m = open('mutations.txt','rb')
 	print(f[0])	
 
+newick_trees = []
+mutation = dict() # (from, to) -> cost
+
 
 if __name__ == '__main__':
 
     import sys
     print("arguments :")
     print(sys.argv)
+    
+    #Loading and parsing newick trees
     f = open(sys.argv[1], 'rb')
     for line in f:
 
         if all([i in line for i in '(',',',')']):  
             line = line[:-3] #Stripping the line of ; and /n
             line = line.replace(' ','')
-
-            print('aa', line)
             newick_trees.append(binary_tree(line))            
+
+    #Loading mutations values
+    mutation = dict() # (from, to) -> cost
+    mut = open(sys.argv[2],'rb').read()
+    lines = mut.split('\n')
+    x_axis = lines[0].replace(' ','')
+    print(x_axis)    
+    for i in lines[1:]:
+        #Thats kinda sketch but is there to remove multiple space
+        last_len = len(i)+1
+        actual_len = len(i)
+        while last_len != actual_len :
+            i = i.replace('  ', ' ')
+            last_len = actual_len
+            actual_len = len(i)
+        #End of sketchy part             
+        l = i.split(' ')
+        print(l)
+        from_ = l[0]
+        assert(len(l)-1 == len(x_axis))
+        for index, to in enumerate(x_axis):
+            mutation[(from_,to)] = int(l[index+1])
+    
+    print(mutation)        
+
 #Début du traitement des données
 #    for l in newick_trees[0].leafs:
 #	l.sequence=getSequence(
