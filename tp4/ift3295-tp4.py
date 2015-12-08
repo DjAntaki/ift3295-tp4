@@ -22,6 +22,7 @@ class node:
             return str(self.id) + " " + str(self.content)
             
     def sankoff(self,index):
+        """ Implémentation de l'algorithme de Sankoff pour la parcimonie."""
         if len(self.childrens)==0:
             #retourne un vecteur ou tous les elements sont np. (infini) sauf l'index correspondant au caractère à l'index i
           
@@ -53,7 +54,7 @@ class binary_tree:
             i.sequence = getSequence(i.content)        
 
     def _parse_newick(self, expr, parent=None):
-        """parse a newick tree to this representation"""
+        """parse a newick tree expression to a binary_tree object."""
         if expr[0] == '(':
             assert expr[-1] == ')',"Erreur de parentheses"
             e = node(parent=parent)
@@ -113,38 +114,11 @@ class binary_tree:
             sequences.append(getSequence(strSeq,p))
         return sequences
 
-#def getSequence(string,p) :
-#    """Kescéça?"""
-#	p.seek(0)	
-#	seq=''
-#	take=False
-#	for line in p:
-#		print(line)
-#		if line[0]=='>':
-#			if line[1:-1]==string:
-#				take=True
-#			else:
-#				take=False
-#		elif(take):
-#			seq+=line[:-1]
-#	return seq
-
-
-
 def getMutations():
 	m = open('mutations.txt','rb')
 	print(f[0])	
 
 newick_trees = []
-
-#if __name__ == '__main__':
-
-import sys
-print("arguments :")
-print(sys.argv)
-
-#Loading proteine values
-p = open(sys.argv[1],'rb')
 
 def getSequence(string):
     p.seek(0)	
@@ -160,48 +134,62 @@ def getSequence(string):
 		    seq+=line[:-1]
     return seq
     
+if __name__ == '__main__':
+    global characters
+    global mutations
+    
+    import sys
+    print("arguments : "+str(sys.argv))
 
-#Loading and parsing newick trees
-f = open(sys.argv[2], 'rb')
-for line in f:
+    #Loading proteine values
+    p = open(sys.argv[1],'rb')
 
-    if all([i in line for i in '(',',',')']):  
-        line = line[:-3] #Stripping the line of ; and /n
-        line = line.replace(' ','')
-        newick_trees.append(binary_tree(line))            
 
-#Loading mutations values
-mutation = dict() # (from, to) -> cost
-mut = open(sys.argv[3],'rb').read()
-lines = mut.split('\n')
-characters = lines[0].replace(' ','')
-mutations = np.zeros((len(characters),len(characters)))    
 
-for y, i in enumerate(lines[1:]):
-    #Thats kinda sketch but is there to remove multiple space
-    last_len = len(i)+1
-    actual_len = len(i)
-    while last_len != actual_len :
-        i = i.replace('  ', ' ')
-        last_len = actual_len
+    #Loading and parsing newick trees
+    f = open(sys.argv[2], 'rb')
+    for line in f:
+
+        if all([i in line for i in '(',',',')']):  
+            line = line[:-3] #Stripping the line of ; and /n
+            line = line.replace(' ','')
+            newick_trees.append(binary_tree(line))            
+
+    #Loading mutations values
+    mut = open(sys.argv[3],'rb').read()
+    lines = mut.split('\n')
+    characters = lines[0].replace(' ','') #the global variable characters represent the alphabet we are working with. 
+
+    #This part is to create numpy array of transition values accordingly to the mutatation.txt file 
+    mutations = np.zeros((len(characters),len(characters)))    
+    for y, i in enumerate(lines[1:]):
+        #Thats kinda sketch but is there to remove multiple space
+        last_len = len(i)+1
         actual_len = len(i)
-    #End of sketchy part             
-    l = i.split(' ')
-    mutations[y] = l[1:]
+        while last_len != actual_len :
+            i = i.replace('  ', ' ')
+            last_len = actual_len
+            actual_len = len(i)
+        #End of sketchy part             
+        l = i.split(' ')
+        mutations[y] = l[1:]
 
-#Preprocess to know the index of sequences that do not have a hole
-sequences = [i.sequence for i in newick_trees[0].leaves]
-good_index = []
-for x in range(np.min([len(i) for i in sequences])):
-    if all([s[x] != '-' for s in sequences]):
-        good_index.append(x) 
-print('goodindexes',good_index)    
+    #Preprocess to know the indexes where none of the sequences contains a hole '-'.
+    sequences = [i.sequence for i in newick_trees[0].leaves]
+    good_index = []
+    for x in range(np.min([len(i) for i in sequences])):
+        if all([s[x] != '-' for s in sequences]):
+            good_index.append(x) 
+    #print('goodindexes',good_index)    
 
 
-#Calculating <<<<<<<< for all trees
-for i,tree in enumerate(newick_trees):
-    total_cost = 0
-    for x in good_index:
-        total_cost += np.min(tree.root.sankoff(x))
-    print("Arbre "+str(i)+" : "+str(total_cost))
+    #Calculating the cost for all trees
+    tree_cost = []
+    for i,tree in enumerate(newick_trees):
+        total_cost = 0
+        for x in good_index:
+            total_cost += np.min(tree.root.sankoff(x))
+        print("Arbre "+str(i)+" : "+str(total_cost))
+        tree_cost.append(total_cost)
 
+    print("L'arbre "+str(np.argmin(tree_cost))+" est le meilleur des "+str(len(tree_cost))+" arbres en entrée.")
